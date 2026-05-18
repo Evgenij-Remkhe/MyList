@@ -1,5 +1,12 @@
-﻿SortWords("a2 a1.A0 fvf A5");
-
+//Input
+SortWords("a2 a1.A0 fvf A5");
+/*
+ * Output:
+ * A0
+ * A5
+ * a1
+ * a2
+ */
 return;
 
 void SortWords(string text)
