@@ -1,68 +1,97 @@
-//Input
-SortWords("a2 a1.A0 fvf A5");
-/*
- * Output:
- * A0
- * A5
- * a1
- * a2
- */
-return;
-
-void SortWords(string text)
+class Program
 {
-    ReadOnlySpan<char> span = text.AsSpan();
-    Span<Word> words = stackalloc Word[span.Length / 2 + 1];
-    int wordCount = 0;
-
-    int lastIndex = 0;
-    for (int i = 0; i <= span.Length; i++)
+    static void Main(string[] args)
     {
-        if(i == span.Length || span[i] == ' ' || span[i] == ',' || span[i] == '.' || span[i] == '!' || span[i] == '?')
+        //Input
+        SortWords("a2 a1.A0 fvf A5", 'A');
+        /*
+         * Output:
+         * A0
+         * A5
+         * a1
+         * a2
+         */
+    }
+
+    private static void SortWords(string text, char firstChar)
+    {
+        ReadOnlySpan<char> span = text.AsSpan();
+        Span<Word> words = stackalloc Word[1];
+        int wordCount = 0;
+
+        int lastIndex = 0;
+        for (int i = 0; i < span.Length; i++)
         {
-            ReadOnlySpan<char> word = span.Slice(lastIndex, i - lastIndex);
-            if (word.Length == 0 || !(word[0] == 'a' || word[0] == 'A' ))
+            if (span[i] == ' ' || span[i] == ',' || span[i] == '.' || span[i] == '!' || span[i] == '?')
             {
+                ReadOnlySpan<char> word = span.Slice(lastIndex, i - lastIndex);
+                if (word.Length == 0 || !char.ToLower(word[0]).Equals(char.ToLower(firstChar)))
+                {
+                    lastIndex = i + 1;
+                    continue;
+                }
+
+                if (wordCount >= words.Length)
+                {
+                    Span<Word> buff = words;
+                    words = stackalloc Word[words.Length * 2];
+                    for (int j = 0; j < buff.Length; j++)
+                    {
+                        words[j] = buff[j];
+                    }
+                }
+
+                words[wordCount++] = new Word(lastIndex, word.Length);
                 lastIndex = i + 1;
-                continue;
             }
-
-            words[wordCount++] = new Word(lastIndex, word.Length);
-            lastIndex = i + 1;
         }
-    }
 
-    if (wordCount == 0)
-    {
-        return;
-    }
-    
-    for (int i = 0; i < wordCount - 1; i++)
-    {
-        for (int j = 0; j < wordCount - i - 1; j++)
+        ReadOnlySpan<char> lastWord = span.Slice(lastIndex, span.Length - lastIndex);
+
+        if (lastWord.Length > 0 && char.ToLower(lastWord[0]).Equals(char.ToLower(firstChar)))
         {
-            ReadOnlySpan<char> word1 = span.Slice(words[j].Start, words[j].Length);
-            ReadOnlySpan<char> word2 = span.Slice(words[j + 1].Start, words[j + 1].Length);
-
-            if (word1.CompareTo(word2, StringComparison.Ordinal) > 0)
+            if (wordCount >= words.Length)
             {
-                (words[j], words[j + 1]) = (words[j + 1], words[j]);
+                Span<Word> buff = words;
+                words = stackalloc Word[words.Length * 2];
+                for (int j = 0; j < buff.Length; j++)
+                {
+                    words[j] = buff[j];
+                }
+            }
+
+            words[wordCount++] = new Word(lastIndex, lastWord.Length);
+        }
+
+
+        if (wordCount == 0)
+        {
+            return;
+        }
+
+        for (int i = 0; i < wordCount - 1; i++)
+        {
+            for (int j = 0; j < wordCount - i - 1; j++)
+            {
+                ReadOnlySpan<char> word1 = span.Slice(words[j].Start, words[j].Length);
+                ReadOnlySpan<char> word2 = span.Slice(words[j + 1].Start, words[j + 1].Length);
+
+                if (word1.CompareTo(word2, StringComparison.Ordinal) > 0)
+                {
+                    (words[j], words[j + 1]) = (words[j + 1], words[j]);
+                }
             }
         }
-    }
 
-    for (int i = 0; i < wordCount; i++)
-    {
-        ReadOnlySpan<char> word = span.Slice(words[i].Start, words[i].Length);
-        foreach (var c in word)
+        for (int i = 0; i < wordCount; i++)
         {
-            Console.Write(c);
+            ReadOnlySpan<char> word = span.Slice(words[i].Start, words[i].Length);
+            Console.WriteLine(word.ToString());
         }
-        Console.WriteLine();
     }
 }
 
-public readonly struct Word
+public struct Word
 {
     public readonly int Start;
     public readonly int Length;
